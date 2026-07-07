@@ -25,5 +25,14 @@ jobs:
         run: |
           echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
 
+      - name: Create .clasp.json
+        run: |
+          cat << EOF > .clasp.json
+          {
+            "scriptId": "${{ secrets.SCRIPT_ID }}",
+            "rootDir": "src"
+          }
+          EOF
+
       - name: Deploy using clasp
         run: npx clasp push --force

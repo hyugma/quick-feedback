@@ -21,7 +21,7 @@ quick-feedback/
 │   └── workflows/
 │       └── deploy.yml # GitHub Actions設定ファイル
 ├── package.json       # プロジェクト情報と依存関係（clasp等）
-└── .clasp.json        # claspの設定ファイル
+└── .clasp.json.sample # claspの設定ファイル（ローカル開発時のテンプレート）
 ```
 
 ## セットアップ手順 (Setup Instructions)
@@ -31,8 +31,7 @@ quick-feedback/
 1.  Google ドライブ上で新規スプレッドシートを作成し、1行目に任意のヘッダー（例: `タイムスタンプ`, `サービスの質`, `雰囲気`, `コスパ`, `コメント`）を設定します。
 2.  メニューから **「拡張機能」>「Apps Script」** を選択し、エディタを開きます。
 3.  エディタのURLから **スクリプトID** をコピーします。（`https://script.google.com/home/projects/【スクリプトID】/edit`）
-4.  本リポジトリ内の `.clasp.json` を開き、`"YOUR_SCRIPT_ID_HERE"` をコピーしたスクリプトIDに置き換えます。
-5.  GASエディタ右上の **「デプロイ」>「新しいデプロイ」** から、種類「ウェブアプリ」を選択して初期デプロイを行います。
+4.  GASエディタ右上の **「デプロイ」>「新しいデプロイ」** から、種類「ウェブアプリ」を選択して初期デプロイを行います。
     *   **アクセスできるユーザー**: `全員`（匿名回答を許可するため）
 
 ### 2. GitHub Actions (自動デプロイ) の設定
@@ -42,18 +41,20 @@ quick-feedback/
     npx @google/clasp login
     ```
 2.  認証成功後、ホームディレクトリ（`~/.clasprc.json`）に生成される認証情報ファイルの中身をすべてコピーします。
-3.  GitHubのこのリポジトリの **Settings > Secrets and variables > Actions** に移動し、**「New repository secret」**を作成します。
-    *   **Name**: `CLASPRC_JSON`
-    *   **Secret**: 先ほどコピーした `.clasprc.json` の中身を貼り付けます。
+3.  GitHubのこのリポジトリの **Settings > Secrets and variables > Actions** に移動し、以下の2つの **「New repository secret」** を作成します。
+    *   `CLASPRC_JSON`: 先ほどコピーした `.clasprc.json` の中身を貼り付けます。
+    *   `SCRIPT_ID`: 手順1-3でコピーした **スクリプトID** を貼り付けます。
 
 これで準備完了です。以降、`main` ブランチに変更を Push すると、GitHub Actionsが自動的に最新のコードをGASへ反映します。
 
 ## 開発と実行 (Development)
 
-GASアプリケーションとして動作させるため、本番環境への反映は `clasp` によるプッシュで行います。
+ローカルで手動プッシュする場合は、テンプレート `.clasp.json.sample` を `.clasp.json` にリネーム（またはコピー）し、`scriptId` を書き換えてから使用してください。（`.clasp.json` は Git で無視されるよう設定済みです）
 
-手動でプッシュする場合は、以下のコマンドを使用します。
 ```bash
+cp .clasp.json.sample .clasp.json
+# .clasp.json の "YOUR_SCRIPT_ID_HERE" を実際のスクリプトIDに書き換える
+
 npm install
 npx clasp push
 ```

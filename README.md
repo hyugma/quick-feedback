@@ -86,7 +86,7 @@ GitHub Actions を利用して、自動的にアンケート画面が生成・�
 
 ### 1. 「通信に失敗しました」またはCORSエラーが出る
 GitHub PagesからGASへ送信する際、GASのURLが間違っているか、GAS側のデプロイが正しく行われていない可能性があります。
-`docs/index.html` 内の `GAS_URL` が正しく設定されているか確認し、GAS側で「アクセスできるユーザー：全員」としてデプロイされているか見直してください。
+GitHubの **Settings > Secrets and variables > Actions** に登録した `GAS_WEBAPP_URL` が正しいか確認し、GAS側で「アクセスできるユーザー：全員」としてデプロイされているか見直してください。
 
 また、`src/Code.js` を変更した場合は、単に `clasp push` するだけでなく、以下のコマンドでAPIのバージョンを更新しないと本番環境に反映されません。
 ```bash

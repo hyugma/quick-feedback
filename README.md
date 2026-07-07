@@ -75,6 +75,17 @@ npx clasp push
 4. **重複回答防止機能のテスト**
    - 送信完了画面のままブラウザを再読み込み（リロード）し、再度アンケートフォームではなく「回答済みです」のメッセージが表示されれば正常です。
 
+## QRコードの生成方法
+
+アンケート（本番用URL）を案内するためのQRコードは、用途に合わせて以下の方法で作成してください。
+
+1. **コマンドツール (qrencode)**
+   - Mac環境なら `brew install qrencode` 後、`qrencode -o qrcode.png "本番URL"` のコマンド一発で作成できます。
+2. **ブラウザの標準機能（最も手軽）**
+   - Google Chrome や Edge で本番URLを開き、右クリックメニューから「このページのQRコードを作成」を選ぶだけでダウンロードできます。
+3. **Webサービスの利用（デザインを調整したい場合）**
+   - [QRのススメ](https://qr.quel.jp/) や [Adobe Express](https://www.adobe.com/jp/express/feature/image/qr-code-generator) 等の無料サイトを利用すると、色や真ん中にロゴを入れるなどのカスタマイズが可能です。
+
 ## よくあるトラブルと解決策 (Troubleshooting)
 
 ### 1. 「スクリプト関数が見つかりません: doGet」というエラーが出る

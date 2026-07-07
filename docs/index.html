@@ -148,41 +148,8 @@
   <div class="container" id="form-container">
     <h1>フィードバックアンケート</h1>
     <form id="survey-form">
-      
-      <!-- 質問1 -->
-      <div class="question-group">
-        <span class="question-label">1. サービスの質はいかがでしたか？</span>
-        <div class="stars" id="q1-stars">
-          <input type="radio" name="q1" id="q1-5" value="5"><label for="q1-5">★</label>
-          <input type="radio" name="q1" id="q1-4" value="4"><label for="q1-4">★</label>
-          <input type="radio" name="q1" id="q1-3" value="3"><label for="q1-3">★</label>
-          <input type="radio" name="q1" id="q1-2" value="2"><label for="q1-2">★</label>
-          <input type="radio" name="q1" id="q1-1" value="1"><label for="q1-1">★</label>
-        </div>
-      </div>
-
-      <!-- 質問2 -->
-      <div class="question-group">
-        <span class="question-label">2. お店の雰囲気はいかがでしたか？</span>
-        <div class="stars" id="q2-stars">
-          <input type="radio" name="q2" id="q2-5" value="5"><label for="q2-5">★</label>
-          <input type="radio" name="q2" id="q2-4" value="4"><label for="q2-4">★</label>
-          <input type="radio" name="q2" id="q2-3" value="3"><label for="q2-3">★</label>
-          <input type="radio" name="q2" id="q2-2" value="2"><label for="q2-2">★</label>
-          <input type="radio" name="q2" id="q2-1" value="1"><label for="q2-1">★</label>
-        </div>
-      </div>
-
-      <!-- 質問3 -->
-      <div class="question-group">
-        <span class="question-label">3. コストパフォーマンスはいかがでしたか？</span>
-        <div class="stars" id="q3-stars">
-          <input type="radio" name="q3" id="q3-5" value="5"><label for="q3-5">★</label>
-          <input type="radio" name="q3" id="q3-4" value="4"><label for="q3-4">★</label>
-          <input type="radio" name="q3" id="q3-3" value="3"><label for="q3-3">★</label>
-          <input type="radio" name="q3" id="q3-2" value="2"><label for="q3-2">★</label>
-          <input type="radio" name="q3" id="q3-1" value="1"><label for="q3-1">★</label>
-        </div>
+      <div id="dynamic-questions-container">
+        <!-- 動的生成される質問がここに入ります -->
       </div>
 
       <!-- フリーコメント -->
@@ -220,35 +187,105 @@
       const submitBtn = document.getElementById('submit-btn');
       const btnText = document.getElementById('btn-text');
       const loader = document.getElementById('loader');
+      const dynamicContainer = document.getElementById('dynamic-questions-container');
+
+      // GASの本番用WebアプリURL（自身のものに書き換えてください）
+      const GAS_URL = 'https://script.google.com/macros/s/AKfycbxEPKEN8X-FyZSjIwhYiXlIZbGpHl2y4gl7bm7PoIPfrfUidHkXVMpCWkogYEu6euht/exec';
+      
+      let questionCount = 0;
+
+      // 質問一覧をGASから取得して描画する
+      fetchQuestions();
+
+      function fetchQuestions() {
+        setLoadingState(true);
+        btnText.textContent = "質問を読み込み中...";
+        
+        fetch(GAS_URL)
+          .then(response => response.json())
+          .then(data => {
+            if (data.questions && Array.isArray(data.questions)) {
+              renderQuestions(data.questions);
+            } else {
+              throw new Error("質問データの形式が不正です");
+            }
+          })
+          .catch(error => {
+            console.error(error);
+            // エラー時はデフォルトの質問を表示するか、エラーメッセージを表示する
+            renderQuestions(["サービスの質はいかがでしたか？", "お店の雰囲気はいかがでしたか？", "コストパフォーマンスはいかがでしたか？"]);
+          })
+          .finally(() => {
+            setLoadingState(false);
+            btnText.textContent = "送信する";
+          });
+      }
+
+      function renderQuestions(questions) {
+        dynamicContainer.innerHTML = '';
+        questionCount = questions.length;
+        
+        questions.forEach((qText, index) => {
+          const qNum = index + 1;
+          const qName = `q${qNum}`;
+          
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'question-group';
+          
+          const labelSpan = document.createElement('span');
+          labelSpan.className = 'question-label';
+          labelSpan.textContent = `${qNum}. ${qText}`;
+          groupDiv.appendChild(labelSpan);
+          
+          const starsDiv = document.createElement('div');
+          starsDiv.className = 'stars';
+          
+          // 5から1へ降順で星のラジオボタンを生成
+          for (let i = 5; i >= 1; i--) {
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = qName;
+            input.id = `${qName}-${i}`;
+            input.value = i;
+            
+            const label = document.createElement('label');
+            label.htmlFor = `${qName}-${i}`;
+            label.textContent = '★';
+            
+            starsDiv.appendChild(input);
+            starsDiv.appendChild(label);
+          }
+          
+          groupDiv.appendChild(starsDiv);
+          dynamicContainer.appendChild(groupDiv);
+        });
+      }
 
       form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // フォームデータの収集
         const formData = new FormData(form);
-        const q1 = formData.get('q1');
-        const q2 = formData.get('q2');
-        const q3 = formData.get('q3');
+        const answers = [];
+        
+        // 全ての動的質問に対して値を取得し、未回答チェック
+        for (let i = 1; i <= questionCount; i++) {
+          const val = formData.get(`q${i}`);
+          if (!val) {
+            alert('すべての評価項目に星をつけてください。');
+            return;
+          }
+          answers.push(parseInt(val, 10));
+        }
+        
         const comment = formData.get('comment');
 
-        // バリデーション (必須項目のチェック)
-        if (!q1 || !q2 || !q3) {
-          alert('すべての評価項目に星をつけてください。');
-          return;
-        }
-
         const data = {
-          q1: parseInt(q1, 10),
-          q2: parseInt(q2, 10),
-          q3: parseInt(q3, 10),
+          answers: answers,
           comment: comment || ''
         };
 
         // UIのローディング状態へ変更
         setLoadingState(true);
-
-        // GASの本番用WebアプリURL（デプロイIDを自身のものに書き換えてください）
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxEPKEN8X-FyZSjIwhYiXlIZbGpHl2y4gl7bm7PoIPfrfUidHkXVMpCWkogYEu6euht/exec';
 
         // GASのバックエンドへデータを送信 (CORS回避のため text/plain で送信)
         fetch(GAS_URL, {

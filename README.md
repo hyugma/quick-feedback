@@ -48,6 +48,7 @@ GitHub Actions を利用して、自動的にアンケート画面が生成・�
 1. GitHubのこのリポジトリの **Settings > Secrets and variables > Actions** を開きます。
 2. **「New repository secret」** をクリックし、以下のシークレットを作成します。
    * `GAS_WEBAPP_URL`: 手順1-6でコピーした **ウェブアプリのURL** を貼り付けます。
+   * `GA_TRACKING_ID`: （任意）Google Analyticsでアクセス解析をしたい場合、測定ID（`G-XXXXXXX`）を入力します。不要な場合は空でOKです。
 3. 次に、左側のメニューから **「Pages」** をクリックします。
 4. **Build and deployment** の Source を `Deploy from a branch` から **「GitHub Actions」** に変更します。
 

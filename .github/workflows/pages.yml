@@ -26,9 +26,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Inject GAS URL
+      - name: Inject GAS URL and GA ID
         run: |
           sed -i "s|__GAS_WEBAPP_URL__|${{ secrets.GAS_WEBAPP_URL }}|g" docs/index.html
+          sed -i "s|__GA_TRACKING_ID__|${{ secrets.GA_TRACKING_ID }}|g" docs/index.html
           
       - name: Setup Pages
         uses: actions/configure-pages@v4

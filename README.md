@@ -113,6 +113,19 @@ npx clasp deploy -i 【デプロイID】 -d "API更新"
    - 画面右上にある **「...」** メニューをクリックし、**「Unpublish site」** を選択します。
    - これで、アンケート画面のURL（`hyugma.github.io/...`）にアクセスしても 404 Not Found になり、画面が表示されなくなります。
 
+### 再開する場合の手順
+停止したアンケートを再び開始する場合は、以下の手順で新しいURLを発行してデプロイし直します。
+
+1. **GASのAPIを新しく発行する**
+   - GASエディタで **「デプロイ」>「新しいデプロイ」** をクリックし、再度ウェブアプリとしてデプロイします（アクセスできるユーザー：全員）。
+   - 発行された **新しいウェブアプリのURL** をコピーします。（アーカイブしたためURLが変わります）
+2. **GitHub Secrets を更新する**
+   - GitHubリポジトリの **Settings > Secrets and variables > Actions** を開き、`GAS_WEBAPP_URL` の値を 1 で取得した新しいURLに変更して Update します。
+3. **GitHub Pages を再公開する**
+   - GitHubの **「Actions」** タブを開き、左側から「Deploy to GitHub Pages」ワークフローを選択します。
+   - 右側の **「Run workflow」** ボタンを押し、`main` ブランチに対して手動で実行します。
+   - 処理が完了すると、新しいGASのURLが埋め込まれた状態でアンケート画面が再公開されます。
+
 ## ライセンス
 
 MIT License

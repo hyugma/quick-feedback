@@ -1,28 +1,20 @@
 /**
- * サーブレットのGETリクエスト処理
- * @param {Object} e - イベントオブジェクト
- * @returns {HtmlOutput} - index.htmlの評価結果
+ * APIエンドポイント: GETリクエスト処理 (稼働確認用)
  */
 function doGet(e) {
-  // index.html ファイルを評価して HTML を生成
-  var htmlOutput = HtmlService.createTemplateFromFile('index').evaluate();
-  
-  // モバイル端末での表示を最適化するための viewport メタタグを設定
-  htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  
-  // X-Frame-Options ヘッダーを設定して iframe での埋め込みを制御（オプション）
-  htmlOutput.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-  
-  return htmlOutput;
+  return ContentService.createTextOutput(JSON.stringify({ status: "API is running", message: "POSTリクエストでデータを送信してください。" }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
- * フロントエンドからのアンケートデータを受け取り、スプレッドシートに記録する
- * @param {Object} data - アンケートの回答データ {q1: number, q2: number, q3: number, comment: string}
- * @returns {boolean} - 処理が成功したかどうか
+ * APIエンドポイント: POSTリクエスト処理 (データ受信とスプレッドシート保存)
  */
-function submitSurvey(data) {
+function doPost(e) {
+  var output;
   try {
+    // text/plainとして送られてきたJSON文字列をパース
+    var data = JSON.parse(e.postData.contents);
+    
     // スクリプトに紐づいたスプレッドシート（Active Spreadsheet）を取得
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     
@@ -41,10 +33,15 @@ function submitSurvey(data) {
     // スプレッドシートの末尾に行を追加
     sheet.appendRow(rowData);
     
-    return true;
+    // 成功レスポンス
+    output = { success: true };
   } catch (error) {
-    // エラー時はログに記録してフロントエンドにも例外を投げる
-    console.error('Error submitting survey: ' + error.message);
-    throw new Error('アンケートの送信に失敗しました。');
+    // 失敗レスポンス
+    console.error('Error in doPost: ' + error.message);
+    output = { success: false, error: error.message };
   }
+  
+  // JSON形式でレスポンスを返す（CORS対応）
+  return ContentService.createTextOutput(JSON.stringify(output))
+    .setMimeType(ContentService.MimeType.JSON);
 }

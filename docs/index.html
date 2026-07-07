@@ -247,19 +247,32 @@
         // UIのローディング状態へ変更
         setLoadingState(true);
 
-        // GASのバックエンド関数を呼び出し
-        google.script.run
-          .withSuccessHandler(function(response) {
-            setLoadingState(false);
+        // GASの本番用WebアプリURL（デプロイIDを自身のものに書き換えてください）
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxEPKEN8X-FyZSjIwhYiXlIZbGpHl2y4gl7bm7PoIPfrfUidHkXVMpCWkogYEu6euht/exec';
+
+        // GASのバックエンドへデータを送信 (CORS回避のため text/plain で送信)
+        fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'text/plain'
+          }
+        })
+        .then(response => response.json())
+        .then(result => {
+          setLoadingState(false);
+          if (result.success) {
             // 成功時の処理：ローカルストレージに保存し、完了画面を表示
             localStorage.setItem(SURVEY_COMPLETED_KEY, 'true');
             showCompletedMessage();
-          })
-          .withFailureHandler(function(error) {
-            setLoadingState(false);
-            alert('送信に失敗しました: ' + error.message);
-          })
-          .submitSurvey(data);
+          } else {
+            alert('サーバーエラーが発生しました: ' + (result.error || '詳細不明'));
+          }
+        })
+        .catch(error => {
+          setLoadingState(false);
+          alert('通信に失敗しました: ' + error.message);
+        });
       });
 
       function setLoadingState(isLoading) {

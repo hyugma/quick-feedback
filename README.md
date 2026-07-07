@@ -9,123 +9,97 @@ QRコードなどからアクセスして匿名で回答できる簡易アンケ
 *   **警告バーなし・高速なレスポンス**: GitHub Pagesを利用することで、GAS単体でホスティングした際に出る警告バーを排除。
 *   **モバイルファーストなデザイン**: レスポンシブ対応のシンプルなUI。
 *   **直感的な星評価**: CSSのみで実装された軽量かつタップしやすい5段階評価システム。
-*   **重複回答の防止**: ブラウザの `localStorage` を利用し、一度回答した端末からは再送信できないように制御。
+*   **重複回答の防止**: ブラウザの `localStorage` を利用し、一度回答した端末からは再送信できないように制御。（※一時ブラウザ等の仕様上、完全な防止ではなく「うっかり二重送信」の防止用です）
 *   **GASバックエンドAPI**: フロントエンドから `fetch` で送信されたデータは、紐付いたGoogle スプレッドシートにリアルタイムで自動記録されます。
-*   **CI/CD対応**: GitHub Actionsを利用して、`main` ブランチへのプッシュ時に自動的にGAS環境（API）がデプロイされます。
 
-## ディレクトリ構成
-
-```
-quick-feedback/
-├── docs/
-│   └── index.html     # フロントエンド（GitHub Pages 公開用HTML / CSS / JS）
-├── src/
-│   ├── Code.js        # GASのバックエンドAPI（doPostでデータを受信しスプレッドシートに追記）
-│   └── appsscript.json# GASの設定ファイル
-├── .github/
-│   └── workflows/
-│       └── deploy.yml # GitHub Actions設定ファイル（GAS APIの自動デプロイ）
-├── package.json       # プロジェクト情報と依存関係（clasp等）
-└── .clasp.json.sample # claspの設定ファイル（ローカル開発時のテンプレート）
-```
+---
 
 ## セットアップ手順 (Setup Instructions)
 
-### 1. バックエンド（Google スプレッドシートと GAS）の準備
+エンジニア知識ゼロでも、以下の手順通りに進めれば **約10分** で自分専用のアンケートシステムが構築できます。
 
-1.  Google ドライブ上で新規スプレッドシートを作成し、1行目に任意のヘッダー（例: `タイムスタンプ`, `サービスの質`, `雰囲気`, `コスパ`, `コメント`）を設定します。
-2.  メニューから **「拡張機能」>「Apps Script」** を選択し、エディタを開きます。
-3.  [Google Apps Script のユーザー設定](https://script.google.com/home/usersettings) にアクセスし、**「Google Apps Script API」** をオンにします。（※claspからの自動デプロイに必須です）
-4.  エディタのURLから **スクリプトID** をコピーします。（`https://script.google.com/home/projects/【スクリプトID】/edit`）
-5.  GASエディタ右上の **「デプロイ」>「新しいデプロイ」** から、種類「ウェブアプリ」を選択して初期デプロイを行います。
-    *   **アクセスできるユーザー**: `全員`（匿名からのAPIリクエストを許可するため）
-6.  表示された **「ウェブアプリのURL（`/exec` で終わるURL）」** をコピーします。
+### 事前準備：リポジトリの複製 (Fork)
+まず、このコードを自分のアカウントにコピーします。
+1. 画面右上の **「Fork」** ボタンをクリックし、ご自身のGitHubアカウントにこのリポジトリを複製（Create fork）してください。
+2. 以降の作業は、複製された**ご自身の**リポジトリ上で行います。
 
-### 2. フロントエンド（GitHub Pages）の設定
+### Step 1. バックエンド（Google スプレッドシートと GAS）の準備
 
-GitHub Actions を利用して、自動的にアンケート画面が生成・公開されます。
+1. Google ドライブ上で新規スプレッドシートを作成します。
+2. **1行目に質問のヘッダー** を設定します。
+   * **（必須ルール）** A列（1列目）は `タイムスタンプ`、一番最後の列は `コメント` 等の自由記入欄にしてください。
+   * その間の列がすべて「星5段階評価の質問」として自動生成されます。
+   * 例: `タイムスタンプ` | `サービスの質` | `雰囲気` | `コスパ` | `コメント`
+3. メニューから **「拡張機能」>「Apps Script」** を選択し、エディタを開きます。
+4. 元から書かれている `function myFunction() { ... }` をすべて消し、このリポジトリにある [src/Code.js](src/Code.js) の中身を**すべてコピーして貼り付け、保存（Ctrl+S / Cmd+S）** します。
+5. エディタ右上の **「デプロイ」>「新しいデプロイ」** をクリックします。
+6. 左側の歯車アイコン⚙️から「ウェブアプリ」を選択し、以下のように設定してデプロイします。
+   * アクセスできるユーザー: **「全員」**（※重要: 匿名からのアクセスを許可するため）
+7. 承認画面が出たら、ご自身のアカウントを選択 → 左下の「詳細」→「安全ではないページに移動」→「許可」を押して進めてください。
+8. 最後に表示される **「ウェブアプリのURL（`/exec` で終わるURL）」** をコピーして控えておきます。
 
-1. GitHubのこのリポジトリの **Settings > Secrets and variables > Actions** を開きます。
+### Step 2. フロントエンド（GitHub Pages）の公開設定
+
+コピーしたURLを登録して、アンケート画面をWebに公開します。
+
+1. GitHubのご自身のリポジトリの **Settings > Secrets and variables > Actions** を開きます。
 2. **「New repository secret」** をクリックし、以下のシークレットを作成します。
-   * `GAS_WEBAPP_URL`: 手順1-6でコピーした **ウェブアプリのURL** を貼り付けます。
-   * `GA_TRACKING_ID`: （任意）Google Analyticsでアクセス解析をしたい場合、測定ID（`G-XXXXXXX`）を入力します。不要な場合は空でOKです。
-3. 次に、左側のメニューから **「Pages」** をクリックします。
-4. **Build and deployment** の Source を `Deploy from a branch` から **「GitHub Actions」** に変更します。
+   * Name: `GAS_WEBAPP_URL`
+   * Secret: （Step 1-8でコピーした **ウェブアプリのURL** を貼り付け）
+3. 【任意】Google Analyticsを利用したい場合は、もう一つ作成します。
+   * Name: `GA_TRACKING_ID`
+   * Secret: `G-XXXXXXX` （測定IDを入力。不要なら空でOK）
+4. 画面左側のメニューから **「Pages」** をクリックします。
+5. **Build and deployment** の Source を `Deploy from a branch` から **「GitHub Actions」** に変更します。
+6. 画面上部の **「Actions」** タブを開き、左側から「Deploy to GitHub Pages」をクリックします。
+7. 右側の **「Run workflow」** ボタンを押し、手動で実行（Run workflow）します。
+8. 処理が完了（緑色のチェックマーク✅）すると、Pages設定画面またはActionsのログに **公開されたWebサイトのURL**（`https://[あなたのユーザー名].github.io/quick-feedback/`）が表示されます。これが実際のアンケート画面です！
 
-### 3. GitHub Actions (GAS APIの自動デプロイ) の設定
-
-1.  ローカルのターミナルで `npx @google/clasp login` を実行し、Googleアカウントを認証します。
-2.  ホームディレクトリ（`~/.clasprc.json`）に生成される認証情報ファイルの中身をすべてコピーします。
-3.  GitHubの **Settings > Secrets and variables > Actions** に移動し、以下の2つの **「New repository secret」** を作成します。
-    *   `CLASPRC_JSON`: 先ほどコピーした `.clasprc.json` の中身を貼り付けます。
-    *   `SCRIPT_ID`: 手順1-4でコピーした **スクリプトID** を貼り付けます。
-
-これで準備完了です。以降、`main` ブランチに Push すると以下の2つが自動的に実行されます。
-* **バックエンド**: `src/` 以下のGASコードが自動デプロイされます。
-* **フロントエンド**: `docs/index.html` 内にURLが埋め込まれ、GitHub Pages に自動公開されます。
-
-## 動作確認 (Verification)
-
-1. **GitHub Pagesの表示確認**
-   - Settings > Pages で発行されたURLにアクセスし、アンケート画面が崩れずに表示されるか確認します。
-2. **データ送信とスプレッドシートの記録確認**
-   - 画面上で評価とコメントを入力し「送信する」を押します。
-   - 「回答済みです」画面が出たら、紐づいているGoogleスプレッドシートを開き、データが追記されていることを確認します。
+---
 
 ## QRコードの生成方法
 
-アンケートへ誘導するためのQRコードは、**GitHub Pagesで公開されたURL**（`https://[ユーザー名].github.io/...`）を使って作成してください。
+アンケートへ誘導するためのQRコードは、**GitHub Pagesで公開されたURL** を使って作成してください。
 
-1. **コマンドツール (qrencode)**
-   - Mac環境なら `brew install qrencode` 後、`qrencode -o qrcode.png "公開用URL"` のコマンド一発で作成できます。
-2. **ブラウザの標準機能（最も手軽）**
-   - Google Chrome や Edge で公開用URLを開き、右クリックメニューから「このページのQRコードを作成」を選ぶだけでダウンロードできます。
-3. **Webサービスの利用**
-   - [QRのススメ](https://qr.quel.jp/) や [Adobe Express](https://www.adobe.com/jp/express/feature/image/qr-code-generator) 等のサイトを利用すると、色やロゴを入れるなどのカスタマイズが可能です。
+* **ブラウザ標準機能（最も手軽）**: Chrome や Edge でアンケート画面を開き、右クリック >「このページのQRコードを作成」
+* **Webサービスの利用**: [QRのススメ](https://qr.quel.jp/) や [Adobe Express](https://www.adobe.com/jp/express/feature/image/qr-code-generator) 等のサイトを利用すると、色やロゴを入れるなどのカスタマイズが可能です。
 
-## よくあるトラブルと解決策 (Troubleshooting)
+---
 
-### 1. 「通信に失敗しました」またはCORSエラーが出る
-GitHub PagesからGASへ送信する際、GASのURLが間違っているか、GAS側のデプロイが正しく行われていない可能性があります。
-GitHubの **Settings > Secrets and variables > Actions** に登録した `GAS_WEBAPP_URL` が正しいか確認し、GAS側で「アクセスできるユーザー：全員」としてデプロイされているか見直してください。
+## 運用方法とよくある質問
 
-また、`src/Code.js` を変更した場合は、単に `clasp push` するだけでなく、以下のコマンドでAPIのバージョンを更新しないと本番環境に反映されません。
-```bash
-npx clasp deploy -i 【デプロイID】 -d "API更新"
-```
+### 質問項目を変更したい場合
+**スプレッドシートの1行目を書き換えるだけ**でOKです。コードの修正や再デプロイは一切不要です。アンケート画面（GitHub Pages）をリロードするだけで、新しい質問内容が即座に反映されます。
 
-### 2. 「無題のプロジェクト (Unverified) needs your permission...」という警告画面が出る
-スクリプトにスプレッドシートへの書き込み権限を与えるための、開発者の初回実行時のみ表示されるセキュリティ画面です。（一般ユーザーには表示されません）
-1. `REVIEW PERMISSIONS` をクリックし、自身のアカウントを選択。
-2. 左下の **「詳細 (Advanced)」** をクリック。
-3. 一番下の **「無題のプロジェクト（安全ではないページ）に移動」** をクリックし、**「許可 (Allow)」** します。
-
-## アンケートの受付を終了・停止する方法
-
-イベントや期間が終了し、これ以上アンケートの回答を受け付けたくない場合は、以下の手順でシステムを停止できます。
-
+### アンケートの受付を終了・停止する方法
+イベント期間が終了した場合は、以下の手順でシステムを停止できます。
 1. **GASのAPIを停止する（データの受付停止）**
    - GASエディタを開き、右上の **「デプロイ」>「デプロイを管理」** をクリックします。
-   - 現在のデプロイ（ウェブアプリ）の右側にあるアーカイブアイコン（またはゴミ箱アイコン）をクリックしてデプロイをアーカイブ（削除）します。
-   - これで、誰かがアクセスしようとしてもAPIがエラーを返し、スプレッドシートに書き込まれなくなります。
-
+   - 現在のデプロイ（ウェブアプリ）の右側にあるアイコンから「アーカイブ（削除）」します。これでデータの書き込みが完全にストップします。
 2. **GitHub Pagesを非公開にする（画面のアクセス停止）**
    - GitHubリポジトリの **Settings > Pages** を開きます。
-   - 画面右上にある **「...」** メニューをクリックし、**「Unpublish site」** を選択します。
-   - これで、アンケート画面のURL（`hyugma.github.io/...`）にアクセスしても 404 Not Found になり、画面が表示されなくなります。
+   - 右上の **「...」** メニューから **「Unpublish site」** を選択します。
 
-### 再開する場合の手順
-停止したアンケートを再び開始する場合は、以下の手順で新しいURLを発行してデプロイし直します。
+### 停止したアンケートを再開する場合
+1. GASエディタで再度「新しいデプロイ」を行い、**新しいウェブアプリのURL** を取得します。
+2. GitHubの `GAS_WEBAPP_URL` Secretを新しいURLに書き換えます。
+3. GitHubの Actions タブから「Deploy to GitHub Pages」を再度 Run workflow すれば再開完了です。
 
-1. **GASのAPIを新しく発行する**
-   - GASエディタで **「デプロイ」>「新しいデプロイ」** をクリックし、再度ウェブアプリとしてデプロイします（アクセスできるユーザー：全員）。
-   - 発行された **新しいウェブアプリのURL** をコピーします。（アーカイブしたためURLが変わります）
-2. **GitHub Secrets を更新する**
-   - GitHubリポジトリの **Settings > Secrets and variables > Actions** を開き、`GAS_WEBAPP_URL` の値を 1 で取得した新しいURLに変更して Update します。
-3. **GitHub Pages を再公開する**
-   - GitHubの **「Actions」** タブを開き、左側から「Deploy to GitHub Pages」ワークフローを選択します。
-   - 右側の **「Run workflow」** ボタンを押し、`main` ブランチに対して手動で実行します。
-   - 処理が完了すると、新しいGASのURLが埋め込まれた状態でアンケート画面が再公開されます。
+### 「通信に失敗しました」またはCORSエラーが出る
+GitHub PagesからGASへ送信する際、GASのURLが間違っているか、GAS側のデプロイが正しく行われていない可能性があります。GitHub Secrets に登録した `GAS_WEBAPP_URL` が正しいか確認し、GAS側で「アクセスできるユーザー：全員」としてデプロイされているか見直してください。
+
+---
+
+## 【開発者向け】高度な設定 (CI/CD)
+
+このプロジェクトには、ローカルでGASのコード（`src/Code.js`）を開発・保守するエンジニア向けの自動デプロイ環境（GitHub Actions）が含まれています。
+フロントエンドの動的化によりGASコードを編集する機会はほぼなくなりましたが、ロジック自体を改修したい場合は以下の手順でCI/CDを利用できます。
+
+1. [Google Apps Script のユーザー設定](https://script.google.com/home/usersettings) で「Google Apps Script API」をオンにする。
+2. ローカルで `npx @google/clasp login` を実行し、生成された `~/.clasprc.json` の中身を GitHub Secrets の `CLASPRC_JSON` に登録。
+3. GASエディタのURLからスクリプトIDを取得し、GitHub Secrets の `SCRIPT_ID` に登録。
+4. 以降、`main` ブランチに Push すると自動的に `src/` 以下のコードがGASへ `clasp push --force` されます。
+*(※注意: `clasp push` はコードを同期するだけで「新しいデプロイ（Webアプリの更新）」は行いません。更新を本番反映するには `npx clasp deploy -i 【デプロイID】` 等の手動反映、またはワークフローのカスタマイズが必要です)*
 
 ## ライセンス
 

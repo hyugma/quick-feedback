@@ -43,14 +43,13 @@ quick-feedback/
 
 ### 2. フロントエンド（GitHub Pages）の設定
 
-1. このリポジトリの `docs/index.html` を開き、250行目付近にある `GAS_URL` の値を、手順1-6で取得した自分のウェブアプリのURLに書き換えます。
-   ```javascript
-   // GASの本番用WebアプリURL（自身のものに書き換えてください）
-   const GAS_URL = 'https://script.google.com/macros/s/XXXXX/exec';
-   ```
-2. GitHubのこのリポジトリの **Settings > Pages** を開きます。
-3. **Build and deployment** の Source を `Deploy from a branch` にし、Branch を `main`、フォルダを **`/docs`** に設定して Save します。
-4. 数分後に公開される GitHub Pages のURL（例: `https://[ユーザー名].github.io/quick-feedback/`）が、実際のアンケート画面のURLになります。
+GitHub Actions を利用して、自動的にアンケート画面が生成・公開されます。
+
+1. GitHubのこのリポジトリの **Settings > Secrets and variables > Actions** を開きます。
+2. **「New repository secret」** をクリックし、以下のシークレットを作成します。
+   * `GAS_WEBAPP_URL`: 手順1-6でコピーした **ウェブアプリのURL** を貼り付けます。
+3. 次に、左側のメニューから **「Pages」** をクリックします。
+4. **Build and deployment** の Source を `Deploy from a branch` から **「GitHub Actions」** に変更します。
 
 ### 3. GitHub Actions (GAS APIの自動デプロイ) の設定
 
@@ -60,7 +59,9 @@ quick-feedback/
     *   `CLASPRC_JSON`: 先ほどコピーした `.clasprc.json` の中身を貼り付けます。
     *   `SCRIPT_ID`: 手順1-4でコピーした **スクリプトID** を貼り付けます。
 
-これで準備完了です。以降、`src/` 以下のGASコードを変更して Push すると、自動的にGASのAPI環境が最新化されます。
+これで準備完了です。以降、`main` ブランチに Push すると以下の2つが自動的に実行されます。
+* **バックエンド**: `src/` 以下のGASコードが自動デプロイされます。
+* **フロントエンド**: `docs/index.html` 内にURLが埋め込まれ、GitHub Pages に自動公開されます。
 
 ## 動作確認 (Verification)
 

@@ -30,8 +30,9 @@ quick-feedback/
 
 1.  Google ドライブ上で新規スプレッドシートを作成し、1行目に任意のヘッダー（例: `タイムスタンプ`, `サービスの質`, `雰囲気`, `コスパ`, `コメント`）を設定します。
 2.  メニューから **「拡張機能」>「Apps Script」** を選択し、エディタを開きます。
-3.  エディタのURLから **スクリプトID** をコピーします。（`https://script.google.com/home/projects/【スクリプトID】/edit`）
-4.  GASエディタ右上の **「デプロイ」>「新しいデプロイ」** から、種類「ウェブアプリ」を選択して初期デプロイを行います。
+3.  [Google Apps Script のユーザー設定](https://script.google.com/home/usersettings) にアクセスし、**「Google Apps Script API」** をオンにします。（※claspなど外部ツールからのデプロイに必須です）
+4.  エディタのURLから **スクリプトID** をコピーします。（`https://script.google.com/home/projects/【スクリプトID】/edit`）
+5.  GASエディタ右上の **「デプロイ」>「新しいデプロイ」** から、種類「ウェブアプリ」を選択して初期デプロイを行います。
     *   **アクセスできるユーザー**: `全員`（匿名回答を許可するため）
 
 ### 2. GitHub Actions (自動デプロイ) の設定
